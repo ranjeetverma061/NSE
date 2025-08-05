@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Trading Protocol</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Light theme */
+            --light-bg: #f8f9fa;
+            --light-card: #ffffff;
+            --light-text: #343a40;
+            --light-accent: #0d6efd;
+            --light-border: #dee2e6;
+            --light-shadow: rgba(0,0,0,0.05);
+            --light-warning: #dc3545;
+            --light-success: #28a745;
+            --light-highlight: #fff3cd;
+            --light-sidebar: #ffffff;
+            --light-sidebar-text: #495057;
+            --light-sidebar-active-bg: #e9f2ff;
+            --light-sidebar-active-text: #0b5ed7;
+            --light-sidebar-hover-bg: #f1f5f9;
+            --light-header-bg: #0d6efd;
+
+
+            /* Dark theme */
+            --dark-bg: #121826;
+            --dark-card: #1e293b;
+            --dark-text: #e2e8f0;
+            --dark-accent: #3b82f6;
+            --dark-border: #334155;
+            --dark-shadow: rgba(0,0,0,0.3);
+            --dark-warning: #ef4444;
+            --dark-success: #22c55e;
+            --dark-highlight: #3e2a00;
+            --dark-sidebar: #1f2937;
+            --dark-sidebar-text: #cbd5e1;
+            --dark-sidebar-active-bg: rgba(59, 130, 246, 0.15);
+            --dark-sidebar-active-text: #60a5fa;
+            --dark-sidebar-hover-bg: #334155;
+            --dark-header-bg: #3b82f6;
+        }
+
+        @keyframes icon-bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html {
+            font-size: 90%;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--light-text);
+            line-height: 1.6;
+        }
+
+        body.dark-mode {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Global Header */
+        .global-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            height: 60px;
+            background-color: var(--light-header-bg);
+            border-bottom: 1px solid var(--light-accent);
+            flex-shrink: 0;
+            z-index: 1000;
+            position: relative;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .dark-mode .global-header {
+            background-color: var(--dark-header-bg);
+            border-bottom-color: var(--dark-accent);
+        }
+
+        .global-header h1 {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .dark-mode .global-header h1 {
+            color: #ffffff;
+        }
+
+        .main-container {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        /* Modern Sidebar */
+        .sidebar {
+            background-color: var(--light-sidebar);
+            width: 260px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--light-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav {
+            padding: 15px;
+        }
+
+        .dark-mode .sidebar {
+            background-color: var(--dark-sidebar);
+            border-right-color: var(--dark-border);
+        }
+        
+        .sidebar-heading {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6c757d;
+            padding: 15px 15px 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .dark-mode .sidebar-heading {
+            color: #94a3b8;
+        }
+
+        .phase-filter {
+            list-style: none;
+        }
+
+        .phase-filter li {
+            margin-bottom: 5px;
+        }
+
+        .phase-filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--light-sidebar-text);
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .dark-mode .phase-filter-btn {
+            color: var(--dark-sidebar-text);
+        }
+        
+        .phase-filter-btn i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            color: #6c757d;
+            transition: transform 0.3s, color 0.2s;
+        }
+        
+        .dark-mode .phase-filter-btn i {
+            color: #94a3b8;
+        }
+
+        .phase-filter-btn:hover {
+            background: var(--light-sidebar-hover-bg);
+        }
+
+        .dark-mode .phase-filter-btn:hover {
+            background: var(--dark-sidebar-hover-bg);
+        }
+
+        .phase-filter-btn.active {
+            background: var(--light-sidebar-active-bg);
+            color: var(--light-sidebar-active-text);
+            font-weight: 600;
+        }
+
+        .dark-mode .phase-filter-btn.active {
+            background: var(--dark-sidebar-active-bg);
+            color: var(--dark-sidebar-active-text);
+        }
+        
+        .phase-filter-btn.active i {
+            color: var(--light-sidebar-active-text);
+        }
+        
+        .dark-mode .phase-filter-btn.active i {
+            color: var(--dark-sidebar-active-text);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-switch {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50px;
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            position: relative;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .dark-mode .theme-switch {
+             background: rgba(0, 0, 0, 0.2);
+             border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .theme-switch::before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            transition: transform 0.3s, background-color 0.3s ease;
+        }
+        
+        .dark-mode .theme-switch::before {
+            transform: translateX(30px);
+        }
+
+        /* Objective Section */
+        .objective {
+            background: var(--light-card);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid var(--light-warning);
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px var(--light-shadow);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .dark-mode .objective {
+            background: var(--dark-card);
+            box-shadow: 0 5px 15px var(--dark-shadow);
+        }
+
+        .objective h2 {
+            color: var(--light-warning);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .objective h2 {
+            color: var(--dark-warning);
+        }
+
+        /* Rules Section */
+        .rules-list {
+            background: var(--light-card);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px var(--light-shadow);
+            position: relative;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dark-mode .rules-list {
+            background: var(--dark-card);
+            box-shadow: 0 5px 15px var(--dark-shadow);
+        }
+
+        .rules-list h3 {
+            color: var(--light-text);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .rules-list h3 {
+            color: var(--dark-text);
+        }
+
+        ul {
+            padding-left: 0;
+            margin: 12px 0;
+            list-style-type: none;
+        }
+        
+        .action-box ul {
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+        .action-box ul li {
+            padding-left: 5px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 0;
+            font-size: 0.95rem;
+        }
+
+        .rules-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--light-border);
+        }
+        .dark-mode .rules-list li {
+            border-bottom-color: var(--dark-border);
+        }
+        .rules-list li:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .rules-list li i {
+            color: #6c757d;
+            font-size: 1.2rem;
+            width: 22px;
+            text-align: center;
+            margin-top: 3px;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .rules-list li i {
+            color: #94a3b8;
+        }
+
+        /* Interactive Checklist */
+        .interactive-checklist {
+            margin: 25px 0;
+        }
+
+        .interactive-checklist h3 {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--light-accent);
+            font-size: 1.3rem;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .interactive-checklist h3 {
+            color: var(--dark-accent);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: var(--light-card);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px var(--light-shadow);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dark-mode .checklist-item {
+            background: var(--dark-card);
+            box-shadow: 0 2px 5px var(--dark-shadow);
+        }
+
+        .checklist-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--light-shadow);
+        }
+
+        .dark-mode .checklist-item:hover {
+            box-shadow: 0 5px 15px var(--dark-shadow);
+        }
+
+        .checklist-item.completed {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid var(--light-success);
+        }
+
+        .dark-mode .checklist-item.completed {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid var(--dark-success);
+        }
+
+        .checklist-checkbox {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--light-border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .dark-mode .checklist-checkbox {
+            border-color: var(--dark-border);
+        }
+
+        .checklist-item.completed .checklist-checkbox {
+            background-color: var(--light-success);
+            border-color: var(--light-success);
+            color: white;
+        }
+
+        .dark-mode .checklist-item.completed .checklist-checkbox {
+            background-color: var(--dark-success);
+            border-color: var(--dark-success);
+        }
+
+        .checklist-text {
+            flex-grow: 1;
+            font-size: 0.95rem;
+        }
+
+        /* Phase Cards */
+        .phases {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .phase-card {
+            background: var(--light-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px var(--light-shadow);
+            position: relative;
+            overflow: hidden;
+            border-top: 4px solid var(--light-accent);
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .phase-card.active {
+            display: block;
+        }
+
+        .dark-mode .phase-card {
+            background: var(--dark-card);
+            box-shadow: 0 5px 15px var(--dark-shadow);
+            border-top: 4px solid var(--dark-accent);
+        }
+
+        .phase-card.phase-0 {
+            border-top-color: #0d6efd;
+        }
+
+        .phase-card.phase-1 {
+            border-top-color: #fd7e14;
+        }
+
+        .phase-card.phase-2 {
+            border-top-color: #198754;
+        }
+
+        .phase-card.phase-3 {
+            border-top-color: #ffc107;
+        }
+
+        .phase-card.phase-4 {
+            border-top-color: #6f42c1;
+        }
+
+        .phase-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--light-border);
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .dark-mode .phase-title {
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .phase-title h2 {
+            color: var(--light-text);
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .phase-title h2 {
+            color: var(--dark-text);
+        }
+
+        .time {
+            background: rgba(13, 110, 253, 0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--light-accent);
+            font-weight: 600;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark-mode .time {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--dark-accent);
+        }
+
+        .no-trade {
+            color: var(--light-warning);
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            background: rgba(220, 53, 69, 0.05);
+            border-radius: 8px;
+            margin: 12px 0;
+            border: 1px dashed var(--light-warning);
+            font-size: 1rem;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .dark-mode .no-trade {
+            color: var(--dark-warning);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px dashed var(--dark-warning);
+        }
+
+        /* Checklist */
+        .checklist {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(13, 110, 253, 0));
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border-top: 1px solid rgba(13, 110, 253, 0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .dark-mode .checklist {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-top: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .checklist h3 {
+            color: var(--light-accent);
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .checklist h3 {
+            color: var(--dark-accent);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            background-color: var(--light-card);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .dark-mode table {
+            background-color: var(--dark-card);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-border);
+            transition: border-color 0.3s ease;
+        }
+
+        .dark-mode th, .dark-mode td {
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        th {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--light-accent);
+            font-size: 0.95rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            vertical-align: middle;
+        }
+
+        .dark-mode th {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--dark-accent);
+        }
+        
+        /* Table Sorting Styles */
+        .sortable-th {
+            cursor: pointer;
+            position: relative;
+            padding-right: 30px; /* Add space for sort icon */
+        }
+        .sortable-th .sort-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.3;
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+        }
+        .sortable-th.asc .sort-icon {
+            opacity: 1;
+        }
+        .sortable-th.desc .sort-icon {
+            opacity: 1;
+        }
+
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background: transparent;
+        }
+
+        .dark-mode tr:nth-child(even) {
+            background: transparent;
+        }
+
+        .yes {
+            color: var(--light-success);
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .yes {
+            color: var(--dark-success);
+        }
+
+        .no {
+            color: var(--light-warning);
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .no {
+            color: var(--dark-warning);
+        }
+
+        /* Form Checkboxes */
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .form-check-label {
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        /* Action Box */
+        .action-box {
+            background: rgba(25, 135, 84, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid var(--light-success);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .dark-mode .action-box {
+            background: rgba(34, 197, 94, 0.05);
+            border-left: 4px solid var(--dark-success);
+        }
+
+        .action-box h4 {
+            color: var(--light-success);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .action-box h4 {
+            color: var(--dark-success);
+        }
+
+        .action-box.warning {
+            background: rgba(220, 53, 69, 0.05);
+            border-left: 4px solid var(--light-warning);
+        }
+
+        .dark-mode .action-box.warning {
+            background: rgba(239, 68, 68, 0.05);
+            border-left: 4px solid var(--dark-warning);
+        }
+
+        .action-box.warning h4 {
+            color: var(--light-warning);
+        }
+
+        .dark-mode .action-box.warning h4 {
+            color: var(--dark-warning);
+        }
+
+        /* Key Point */
+        .key-point {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            background: rgba(13, 110, 253, 0.03);
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .dark-mode .key-point {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .key-point i {
+            color: var(--light-accent);
+            font-size: 1.1rem;
+            min-width: 22px;
+            padding-top: 2px;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .key-point i {
+            color: var(--dark-accent);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            width: 100%;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+
+        /* Journal Form */
+        .journal-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .journal-form .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .journal-form label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .journal-form input, .journal-form select, .journal-form textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--light-border);
+            background-color: var(--light-card);
+            color: var(--light-text);
+            transition: all 0.3s;
+        }
+        .dark-mode .journal-form input, .dark-mode .journal-form select, .dark-mode .journal-form textarea {
+            background-color: var(--dark-card);
+            border-color: var(--dark-border);
+            color: var(--dark-text);
+        }
+        .journal-form .full-width {
+            grid-column: 1 / -1;
+        }
+        .journal-form button {
+            grid-column: 1 / -1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: var(--light-accent);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .dark-mode .journal-form button {
+            background-color: var(--dark-accent);
+        }
+        .journal-form button:hover {
+            opacity: 0.9;
+        }
+        
+        #chart-paste-area {
+            border: 2px dashed var(--light-border);
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .dark-mode #chart-paste-area {
+            color: #94a3b8;
+            border-color: var(--dark-border);
+        }
+        #chart-image-preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--light-border);
+        }
+        .dark-mode #chart-image-preview {
+            border-color: var(--dark-border);
+        }
+        .journal-chart-thumb {
+            width: 80px;
+            height: auto;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .journal-chart-thumb:hover {
+            transform: scale(1.1);
+        }
+
+
+        /* Image Modal */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1001; 
+            padding-top: 60px; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Calculator */
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .calculator-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .calculator-results {
+            background: var(--light-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--light-border);
+        }
+        .dark-mode .calculator-results {
+            background: var(--dark-bg);
+            border-color: var(--dark-border);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-border);
+        }
+        .dark-mode .result-item {
+            border-bottom-color: var(--dark-border);
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .result-item span:first-child {
+            font-weight: 500;
+        }
+         .result-item span:last-child {
+            font-weight: 600;
+        }
+        .result-item.profit {
+            color: var(--light-success);
+        }
+        .dark-mode .result-item.profit {
+             color: var(--dark-success);
+        }
+         .result-item.risk {
+            color: var(--light-warning);
+        }
+         .dark-mode .result-item.risk {
+             color: var(--dark-warning);
+        }
+        .strategy-toggle {
+            display: flex;
+            border: 1px solid var(--light-border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .dark-mode .strategy-toggle {
+            border-color: var(--dark-border);
+        }
+        .strategy-toggle button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--light-text);
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .dark-mode .strategy-toggle button {
+            color: var(--dark-text);
+        }
+        .strategy-toggle button.active {
+            background-color: var(--light-accent);
+            color: #fff;
+        }
+        .dark-mode .strategy-toggle button.active {
+            background-color: var(--dark-accent);
+        }
+        .price-percent-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .price-percent-group input:first-child {
+            flex-grow: 1;
+        }
+        .price-percent-group input:last-child {
+            width: 80px;
+        }
+
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px 20px;
+            color: #6c757d;
+            font-size: 0.85rem;
+            font-style: italic;
+            transition: color 0.3s ease;
+        }
+
+        .dark-mode .footer {
+            color: #94a3b8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            html, body {
+                height: auto;
+                overflow: auto;
+            }
+            body {
+                flex-direction: column;
+            }
+            
+            .page-wrapper {
+                height: auto;
+            }
+
+            .global-header {
+                position: static;
+                height: auto;
+                padding: 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1px solid var(--light-border);
+            }
+
+            .dark-mode .sidebar {
+                border-bottom-color: var(--dark-border);
+            }
+            
+            .main-content {
+                height: auto;
+                overflow-y: visible;
+            }
+
+            .calculator-container, .journal-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <header class="global-header">
+            <h1><i class="fas fa-chart-line"></i> Mechanical Day Protocol</h1>
+            <div class="controls">
+                <button class="theme-switch" id="themeToggle"></button>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <!-- Sidebar Navigation -->
+            <div class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="sidebar-heading">Main</div>
+                    <ul class="phase-filter">
+                        <li>
+                            <button class="phase-filter-btn active" data-phase="rules-tab">
+                                <i class="fas fa-gavel"></i> Non-Negotiable Rules
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="checklist-tab">
+                                <i class="fas fa-tasks"></i> Daily Checklist
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="phase-0">
+                                <i class="fas fa-clipboard-list"></i> Phase 0: Briefing
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="phase-1">
+                                <i class="fas fa-ban"></i> Phase 1: Amateur Hour
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="phase-2">
+                                <i class="fas fa-search"></i> Phase 2: The Stalk
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="phase-3">
+                                <i class="fas fa-wind"></i> Phase 3: Wind-Down
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="phase-4">
+                                <i class="fas fa-file-alt"></i> Phase 4: Debriefing
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="sidebar-heading">Tools</div>
+                    <ul class="phase-filter">
+                         <li>
+                            <button class="phase-filter-btn" data-phase="watchlist-tab">
+                                <i class="fas fa-list"></i> Watchlist
+                            </button>
+                        </li>
+                        <li>
+                            <button class="phase-filter-btn" data-phase="calculator-tab">
+                                <i class="fas fa-calculator"></i> Calculator
+                            </button>
+                        </li>
+                         <li>
+                            <button class="phase-filter-btn" data-phase="journal-tab">
+                                <i class="fas fa-book-open"></i> Journal
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="content-section">
+                    <section class="objective">
+                        <h2><i class="fas fa-bullseye"></i> Objective</h2>
+                        <p><strong>Not to make money. To follow the rules 100%.</strong> Take only one <span class="highlight">A+ trade</span> per day, or no trade at all.</p>
+                    </section>
+                    
+                    <div class="phases">
+                        <!-- Rules Tab Content -->
+                        <div class="phase-card active" id="rules-tab">
+                             <div class="rules-list">
+                                <h3><i class="fas fa-gavel"></i> Non-Negotiable Rules</h3>
+                                <ul>
+                                    <li><i class="fas fa-binoculars"></i><span>I will focus only on my watchlist of 30 stocks</span></li>
+                                    <li><i class="fas fa-ruler-horizontal"></i><span>I will only trade clean, horizontal range breakouts</span></li>
+                                    <li><i class="fas fa-hourglass-half"></i><span>Patience is my weapon. It's not necessary to get a trade every day</span></li>
+                                    <li><i class="fas fa-volume-up"></i><span>A breakout without volume is a trap</span></li>
+                                    <li><i class="fas fa-robot"></i><span>My entry trigger will be mechanical</span></li>
+                                    <li><i class="fas fa-shield-halved"></i><span>My stop loss is predetermined and absolute</span></li>
+                                    <li><i class="fas fa-crosshairs"></i><span>I will only take one trade per day</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Checklist Tab Content -->
+                        <div class="phase-card" id="checklist-tab">
+                            <div class="interactive-checklist">
+                                <h3><i class="fas fa-tasks"></i> Daily Preparation Checklist</h3>
+                                <div class="checklist-item">
+                                    <div class="checklist-checkbox"><i class="fas fa-check" style="display: none;"></i></div>
+                                    <div class="checklist-text">Read Non-Negotiable Rules aloud</div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-checkbox"><i class="fas fa-check" style="display: none;"></i></div>
+                                    <div class="checklist-text">Review watchlist on 15-min and 1-hour charts</div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-checkbox"><i class="fas fa-check" style="display: none;"></i></div>
+                                    <div class="checklist-text">Mark potential ranges (no decisions yet)</div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-checkbox"><i class="fas fa-check" style="display: none;"></i></div>
+                                    <div class="checklist-text">Set mental reminder: No trades during Amateur Hour</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Watchlist Tab Content -->
+                        <div class="phase-card" id="watchlist-tab">
+                             <div class="rules-list">
+                                <h3><i class="fas fa-list"></i> Watchlist</h3>
+                                <table id="watchlist-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="sortable-th">Stock Name</th>
+                                            <th class="sortable-th">Normal Behavior / General Character</th>
+                                            <th class="sortable-th">Intraday Breakout Character</th>
+                                            <th class="sortable-th">Breakout Grade (Example)</th>
+                                            <th class="sortable-th">Rule / Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>AXISBANK</td>
+                                            <td>High liquidity, volatile. Sensitive to market sentiment &amp; RBI news.</td>
+                                            <td>Fast and sharp moves on breakout. Can have false breakouts.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ICICIBANK</td>
+                                            <td>High liquidity, more volatile than HDFC Bank. Reacts strongly to news.</td>
+                                            <td>Strong trending moves after a breakout. High momentum.</td>
+                                            <td>A (Aggressive) / B (Conservative)</td>
+                                            <td>Hunt (Aggressive) / Observe (Conservative)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>SBIN</td>
+                                            <td>Very high liquidity &amp; volume. News-driven, especially by govt policies.</td>
+                                            <td>Can have powerful, high-volume breakouts. Often respects levels.</td>
+                                            <td>A</td>
+                                            <td>Hunt / A-Grade Target</td>
+                                        </tr>
+                                        <tr>
+                                            <td>HDFCBANK</td>
+                                            <td>High liquidity, relatively less volatile. Considered a market leader.</td>
+                                            <td>Breakouts are reliable and sustained, but less explosive.</td>
+                                            <td>A (Conservative) / B (Aggressive)</td>
+                                            <td>Hunt (Conservative) / Observe (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>KOTAKBANK</td>
+                                            <td>Behaves similarly to HDFC Bank. Stable with lower volatility.</td>
+                                            <td>Gives clean, reliable breakouts with measured, less erratic moves.</td>
+                                            <td>A (Conservative) / B (Aggressive)</td>
+                                            <td>Hunt (Conservative) / Observe (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BAJFINANCE</td>
+                                            <td>Very high beta and highly volatile stock. Strong growth history.</td>
+                                            <td>Known for very sharp, fast, and large-range moves.</td>
+                                            <td>A (Aggressive)</td>
+                                            <td>Hunt / A-Grade Target (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>INFY</td>
+                                            <td>Lower volatility. Influenced by NASDAQ &amp; USD/INR rates.</td>
+                                            <td>Breakouts are usually technical and respected, but moves are moderate.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TCS</td>
+                                            <td>Very low volatility, slow-moving stock. Often moves in a range.</td>
+                                            <td>Breakouts are rare and moves are small. Lacks momentum.</td>
+                                            <td>C</td>
+                                            <td>Ignore</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TECHM</td>
+                                            <td>More volatile compared to TCS &amp; INFY. Moves can be erratic.</td>
+                                            <td>Can give sharp breakout moves, but can also be choppy.</td>
+                                            <td>B / C</td>
+                                            <td>Observe with Caution</td>
+                                        </tr>
+                                        <tr>
+                                            <td>RELIANCE</td>
+                                            <td>Index heavyweight; its move often dictates market direction.</td>
+                                            <td>Gives strong, decisive breakouts with high volume. Trends well.</td>
+                                            <td>A</td>
+                                            <td>Hunt / A-Grade Target</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TATAMOTORS</td>
+                                            <td>Highly volatile and news-driven. Reacts to monthly sales data.</td>
+                                            <td>Extremely aggressive and fast on breakouts. High risk, high reward.</td>
+                                            <td>A (Aggressive)</td>
+                                            <td>Hunt / A-Grade Target (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>MARUTI</td>
+                                            <td>Established leader, less volatile than Tata Motors. Respects levels.</td>
+                                            <td>Breakouts are generally more orderly and predictable.</td>
+                                            <td>A (Conservative) / B (Aggressive)</td>
+                                            <td>Hunt (Conservative) / Observe (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>M&amp;M</td>
+                                            <td>Cyclical stock. Good volume. Mix of auto &amp; farm equipment.</td>
+                                            <td>Shows good momentum on breakouts. Strong but less wild moves.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TATASTEEL</td>
+                                            <td>Extremely cyclical and highly volatile. Dependent on commodity prices.</td>
+                                            <td>Gives explosive, high-momentum breakouts. Trends strongly.</td>
+                                            <td>A (Aggressive)</td>
+                                            <td>Hunt / A-Grade Target (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>HINDALCO</td>
+                                            <td>Similar to Tata Steel but for Aluminum. Highly volatile and cyclical.</td>
+                                            <td>Very fast and sharp moves on breakouts. High-risk profile.</td>
+                                            <td>A (Aggressive)</td>
+                                            <td>Hunt / A-Grade Target (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>JSWSTEEL</td>
+                                            <td>High-beta metal stock. Very volatile and follows a strong trend.</td>
+                                            <td>Behaves very similarly to Tata Steel. Powerful breakout moves.</td>
+                                            <td>A (Aggressive)</td>
+                                            <td>Hunt / A-Grade Target (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>JINDALSTEL</td>
+                                            <td>Another high-volatility metal stock. Can be more erratic.</td>
+                                            <td>Sharp and aggressive moves, but prone to volatility spikes.</td>
+                                            <td>B (Aggressive)</td>
+                                            <td>Observe with Caution (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>LT</td>
+                                            <td>Index heavyweight. Slow and steady mover. Stable blue-chip.</td>
+                                            <td>Breakouts are reliable and sustained, though the pace is slow.</td>
+                                            <td>A (Conservative) / C (Aggressive)</td>
+                                            <td>Hunt (Conservative) / Ignore (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BHARTIARTL</td>
+                                            <td>Sector leader. Volatile and sensitive to news.</td>
+                                            <td>Can give strong, trending moves on breakout days. Good momentum.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>TITAN</td>
+                                            <td>High growth stock, trends well. Good liquidity and volatility.</td>
+                                            <td>Gives clean breakouts and follows a trend well. Popular stock.</td>
+                                            <td>A</td>
+                                            <td>Hunt / A-Grade Target</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ADANIPORTS</td>
+                                            <td>Can be very volatile and news-sensitive due to group sentiment.</td>
+                                            <td>Can have very large, fast moves on breakouts. High risk.</td>
+                                            <td>B (Aggressive)</td>
+                                            <td>Observe with Caution (Aggressive)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ASHOKLEY</td>
+                                            <td>Commercial vehicle focus. Cyclical. More volatile than Maruti/M&amp;M.</td>
+                                            <td>Breakouts can be sharp but may not sustain as well as leaders.</td>
+                                            <td>B / C</td>
+                                            <td>Observe with Caution</td>
+                                        </tr>
+                                        <tr>
+                                            <td>SUNPHARMA</td>
+                                            <td>Defensive but volatile for its sector. Highly sensitive to USFDA news.</td>
+                                            <td>Can have large gaps due to news. Breakouts are often news-driven.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ULTRACEMCO</td>
+                                            <td>Leader in the cement sector. Tied to economic cycles.</td>
+                                            <td>Moves steadily. Breakouts are generally technical and respected.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ITC</td>
+                                            <td>Traditionally a low-volatility, defensive stock. Often range-bound.</td>
+                                            <td>Not ideal for breakout trading due to its slow nature.</td>
+                                            <td>C</td>
+                                            <td>Ignore</td>
+                                        </tr>
+                                        <tr>
+                                            <td>APOLLOHOSP</td>
+                                            <td>Less volatile than pharma stocks. A steady, trending stock.</td>
+                                            <td>Breakouts are generally slow and gradual. Better for swings.</td>
+                                            <td>C</td>
+                                            <td>Ignore</td>
+                                        </tr>
+                                        <tr>
+                                            <td>GRASIM</td>
+                                            <td>Diversified company. Moves are generally steady and cyclical.</td>
+                                            <td>Moderate volatility. Breakouts are technical and offer measured moves.</td>
+                                            <td>B</td>
+                                            <td>Observe / Monitor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>BRITANNIA</td>
+                                            <td>Defensive FMCG stock. Lower volatility.</td>
+                                            <td>Moves are slow. Not a preferred candidate for breakout trading.</td>
+                                            <td>C</td>
+                                            <td>Ignore</td>
+                                        </tr>
+                                        <tr>
+                                            <td>PIDILITIND</td>
+                                            <td>Monopoly-like business. A steady compounder with lower volatility.</td>
+                                            <td>Breakouts are slow and gradual. Not for quick, sharp moves.</td>
+                                            <td>C</td>
+                                            <td>Ignore</td>
+                                        </tr>
+                                        <tr>
+                                            <td>POWERGRID</td>
+                                            <td>Defensive, low-volatility utility stock.</td>
+                                            <td>Very slow-moving. Not suitable for intraday breakout trading.</td>
+                                            <td>C</td>
+                                            <td>Ignore</td>
+                                        </tr>
+                                        <tr>
+                                            <td>DIVISLAB</td>
+                                            <td>High-beta pharma stock. Volatile and can have large price swings.</td>
+                                            <td>Capable of sharp and fast moves, especially on sector news.</td>
+                                            <td>B (Aggressive)</td>
+                                            <td>Observe with Caution (Aggressive)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Calculator Tab Content -->
+                        <div class="phase-card" id="calculator-tab">
+                            <div class="rules-list">
+                                <h3><i class="fas fa-calculator"></i> Risk/Reward Calculator</h3>
+                                <div class="calculator-container">
+                                    <div class="calculator-form">
+                                        <div class="strategy-toggle">
+                                            <button id="long-strategy-btn" class="active">Long</button>
+                                            <button id="short-strategy-btn">Short</button>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-stock-select">Select Stock (for auto price)</label>
+                                            <select id="calc-stock-select">
+                                                <option value="">-- Manual Entry --</option>
+                                                <!-- Nifty 50 stocks will be populated here by JS -->
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-capital">Account Capital (₹)</label>
+                                            <input type="number" id="calc-capital" value="100000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-risk">Risk (%)</label>
+                                            <input type="number" id="calc-risk" value="1">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-entry">Entry Price (₹)</label>
+                                            <input type="number" id="calc-entry" step="any">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-stop">Stop Loss</label>
+                                            <div class="price-percent-group">
+                                                <input type="number" id="calc-stop-price" step="any" placeholder="Price (₹)">
+                                                <input type="number" id="calc-stop-percent" step="any" placeholder="%">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="calc-target">Target Price</label>
+                                            <div class="price-percent-group">
+                                                <input type="number" id="calc-target-price" step="any" placeholder="Price (₹)">
+                                                <input type="number" id="calc-target-percent" step="any" placeholder="%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="calculator-results">
+                                        <div class="result-item risk">
+                                            <span>Risk Amount</span>
+                                            <span id="result-risk-amount">₹0.00</span>
+                                        </div>
+                                        <div class="result-item">
+                                            <span>Position Size</span>
+                                            <span id="result-position-size">0</span>
+                                        </div>
+                                         <div class="result-item">
+                                            <span>Risk/Reward Ratio</span>
+                                            <span id="result-rr-ratio">1 : 0</span>
+                                        </div>
+                                        <div class="result-item profit">
+                                            <span>Potential Profit</span>
+                                            <span id="result-potential-profit">₹0.00</span>
+                                        </div>
+                                        <hr style="margin: 15px 0; border-color: var(--light-border);">
+                                        <div id="rr-table-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Journal Tab Content -->
+                        <div class="phase-card" id="journal-tab">
+                             <div class="rules-list">
+                                <h3><i class="fas fa-book-open"></i> Trade Journal</h3>
+                                <form class="journal-form" id="journalForm">
+                                    <div class="form-group">
+                                        <label for="journal-date">Date</label>
+                                        <input type="date" id="journal-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="journal-ticker">Ticker</label>
+                                        <input type="text" id="journal-ticker" placeholder="e.g., AAPL" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="journal-entry">Entry Price</label>
+                                        <input type="number" id="journal-entry" step="any" placeholder="150.25" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="journal-exit">Exit Price</label>
+                                        <input type="number" id="journal-exit" step="any" placeholder="152.50" required>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label for="journal-setup">Setup</label>
+                                        <input type="text" id="journal-setup" placeholder="e.g., Clean Breakout" required>
+                                    </div>
+                                     <div class="form-group full-width">
+                                        <label for="journal-result">Result</label>
+                                        <select id="journal-result">
+                                            <option value="win">Win</option>
+                                            <option value="loss">Loss</option>
+                                            <option value="breakeven">Breakeven</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label for="chart-paste-area">Chart Image</label>
+                                        <div id="chart-paste-area" contenteditable="true">Paste Chart Image Here</div>
+                                        <img id="chart-image-preview" src="" alt="Chart Preview" style="display: none;">
+                                        <input type="file" id="journal-chart-image" accept="image/*" style="margin-top: 10px;">
+                                    </div>
+                                    <div class="form-group full-width">
+                                        <label for="journal-notes">Notes</label>
+                                        <textarea id="journal-notes" rows="4" placeholder="Why did you take this trade? How did you manage it?"></textarea>
+                                    </div>
+                                    <button type="submit">Save Trade</button>
+                                </form>
+                                <hr style="margin: 30px 0; border-color: var(--light-border);">
+                                <h3><i class="fas fa-history"></i> Journal Entries</h3>
+                                <table id="journal-entries-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="sortable-th">Date</th>
+                                            <th class="sortable-th">Ticker</th>
+                                            <th class="sortable-th">Entry</th>
+                                            <th class="sortable-th">Exit</th>
+                                            <th class="sortable-th">Result</th>
+                                            <th>Chart</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Entries will be added here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Phase 0 -->
+                        <div class="phase-card" id="phase-0">
+                            <div class="phase-title">
+                                <h2><i class="fas fa-clipboard-list"></i> Phase 0: The Briefing</h2>
+                                <div class="time">9:00 AM - 9:15 AM</div>
+                            </div>
+                            <div class="phase-content">
+                                <p class="mb-3"><em>Preparation for battle</em></p>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-desktop"></i>
+                                    <div>
+                                        <strong>9:00 AM:</strong> System on. Open trading terminal.
+                                    </div>
+                                </div>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-book"></i>
+                                    <div>
+                                        <strong>9:05 AM:</strong> Read your "Non-Negotiable Rules" list. Read them out loud.
+                                    </div>
+                                </div>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-chart-line"></i>
+                                    <div>
+                                        <strong>9:10 AM:</strong> Review your watchlist stocks on 15-min and 1-hour charts. Mark potential ranges formed yesterday or forming today. Only mark, don't decide.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 1 -->
+                        <div class="phase-card" id="phase-1">
+                            <div class="phase-title">
+                                <h2><i class="fas fa-ban"></i> Phase 1: Amateur Hour</h2>
+                                <div class="time">9:15 AM - 10:00 AM</div>
+                            </div>
+                            <div class="phase-content">
+                                <p class="mb-3"><em>No-trade zone</em></p>
+                                
+                                <div class="no-trade">
+                                    <i class="fas fa-hand"></i> DO NOT TRADE
+                                </div>
+                                
+                                <p>This is the market's most volatile and unpredictable time. Big players and algo systems hunt small traders during this period.</p>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-binoculars"></i>
+                                    <div>
+                                        <strong>Your task:</strong> Just observe. Watch your watchlist stocks. Let the market decide its direction. Trading now is like standing in front of a moving train.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 2 -->
+                        <div class="phase-card" id="phase-2">
+                            <div class="phase-title">
+                                <h2><i class="fas fa-search"></i> Phase 2: The Stalk</h2>
+                                <div class="time">10:00 AM - 2:30 PM</div>
+                            </div>
+                            <div class="phase-content">
+                                <p class="mb-3"><em>Prime hunting time</em></p>
+                                
+                                <p>The market has calmed down, trends and ranges are becoming clear.</p>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-filter"></i>
+                                    <div>
+                                        <strong>Scan:</strong> Scan your watchlist stock by stock. Is any stock trading near your Rule #2 (clean range)?
+                                    </div>
+                                </div>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <strong>If not:</strong> Move to next stock. If nothing in the entire list, relax. Your job is to wait.
+                                    </div>
+                                </div>
+                                
+                                <div class="checklist">
+                                    <h3><i class="fas fa-clipboard-check"></i> Pre-Trade Checklist</h3>
+                                    <table>
+                                        <tr>
+                                            <th><i class="fas fa-drafting-compass"></i> Check</th>
+                                            <th>Question</th>
+                                            <th>Validation</th>
+                                        </tr>
+                                        <tr>
+                                            <td>Setup</td>
+                                            <td>Is this a clean, horizontal range breakouts?</td>
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="setup-yes">
+                                                    <label class="form-check-label yes" for="setup-yes">Yes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="setup-no">
+                                                    <label class="form-check-label no" for="setup-no">No</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Volume</td>
+                                            <td>Is there increased volume as price approaches the range?</td>
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="volume-yes">
+                                                    <label class="form-check-label yes" for="volume-yes">Yes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="volume-no">
+                                                    <label class="form-check-label no" for="volume-no">No</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Risk/Reward</td>
+                                            <td>Is my stop loss (below range) and target (at least 1:2) logical?</td>
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="risk-yes">
+                                                    <label class="form-check-label yes" for="risk-yes">Yes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="risk-no">
+                                                    <label class="form-check-label no" for="risk-no">No</label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Entry Trigger</td>
+                                            <td>What is my mechanical entry trigger? (Price Break/Volume Spike/5-min Close)</td>
+                                            <td>
+                                                <input type="text" class="form-control" placeholder="Define your trigger" style="padding: 5px; border: 1px solid var(--light-border); border-radius: 4px; width: 100%;">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Position Size</td>
+                                            <td>Calculate quantity based on ₹1,000 capital and stop loss</td>
+                                            <td>
+                                                <input type="text" class="form-control" placeholder="Enter calculated quantity" style="padding: 5px; border: 1px solid var(--light-border); border-radius: 4px; width: 100%;">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <div class="chart-container">
+                                        <canvas id="checklistChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="action-box">
+                                    <h4><i class="fas fa-play"></i> Execute</h4>
+                                    <p>If all checklist answers are "Yes", place a Stop-Limit Order in your broker terminal. Never enter with a market order.</p>
+                                </div>
+                                
+                                <div class="action-box warning">
+                                    <h4><i class="fas fa-tasks"></i> Management</h4>
+                                    <ul>
+                                        <li><strong>Order Executed?</strong> Excellent. Your job is done. Set stop loss and target. Close terminal or stop watching charts.</li>
+                                        <li><strong>Stop Loss Hit?</strong> IMMEDIATELY trigger "Revenge Trading Kill Switch". Get up, go outside for 15 min. Your day is done.</li>
+                                        <li><strong>Target Hit?</strong> Congratulations. Book profit. Close terminal. Your day is done.</li>
+                                        <li><strong>Order Not Executed & Price Reversed?</strong> Excellent. You avoided a bad trade. Cancel pending order and look for new setups.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 3 -->
+                        <div class="phase-card" id="phase-3">
+                            <div class="phase-title">
+                                <h2><i class="fas fa-wind"></i> Phase 3: Wind-Down</h2>
+                                <div class="time">2:30 PM - 3:30 PM</div>
+                            </div>
+                            <div class="phase-content">
+                                <div class="no-trade">
+                                    <i class="fas fa-ban"></i> NO NEW TRADES
+                                </div>
+                                
+                                <p>This is another volatile period. Positions are squared off. Taking new trades now is gambling.</p>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-running"></i>
+                                    <div>
+                                        <strong>If your morning trade is still running (should be rare):</strong> Manage it. Otherwise, just watch and learn.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 4 -->
+                        <div class="phase-card" id="phase-4">
+                            <div class="phase-title">
+                                <h2><i class="fas fa-file-alt"></i> Phase 4: Debriefing</h2>
+                                <div class="time">After 3:30 PM</div>
+                            </div>
+                            <div class="phase-content">
+                                <p class="mb-3"><em>The most important part of your day</em></p>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-book"></i>
+                                    <div>
+                                        <strong>Journaling:</strong> Open your Notion journal.
+                                        <ul>
+                                            <li><strong>If trade taken:</strong> Add entry, exit, stop loss screenshots. How did you feel (fear/greed)? Did you follow 100% of rules? What went wrong/right?</li>
+                                            <li><strong>If no trade taken:</strong> This is a win. Write: "No A+ setup today, so no trade taken. Discipline maintained."</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="key-point">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <div>
+                                        <strong>Next Day Prep:</strong> Review watchlist for tomorrow. Mark any stocks forming good ranges for tomorrow.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>The Mechanical Day Protocol - Breakout Specialist's Blueprint</p>
+                    <p>Discipline is the bridge between goals and accomplishment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <!-- Image Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+    
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Configuration ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // --- App Initialization ---
+        let app, auth, db, userId;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase initialization failed. Please provide your Firebase config.", e);
+        }
+
+
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        // Check for saved theme preference or respect OS preference
+        if (localStorage.getItem('theme') === 'dark' || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches && !localStorage.getItem('theme'))) {
+            body.classList.add('dark-mode');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateChart();
+        });
+        
+        // Phase filtering
+        const phaseFilterButtons = document.querySelectorAll('.phase-filter-btn');
+        const phaseCards = document.querySelectorAll('.phase-card');
+        let chartInitialized = false;
+
+        phaseFilterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // De-activate all buttons in all lists
+                document.querySelectorAll('.phase-filter-btn').forEach(btn => btn.classList.remove('active'));
+                // Activate the clicked button
+                button.classList.add('active');
+                
+                const phase = button.dataset.phase;
+                
+                phaseCards.forEach(card => {
+                    card.classList.remove('active');
+                    if (card.id === phase) {
+                        card.classList.add('active');
+                    }
+                });
+
+                if (phase === 'phase-2' && !chartInitialized) {
+                    createChart();
+                    updateChart();
+                    chartInitialized = true;
+                }
+            });
+        });
+        
+        // Collapsible phase content
+        const phaseTitles = document.querySelectorAll('.phase-title');
+        
+        phaseTitles.forEach(title => {
+            title.addEventListener('click', () => {
+                const content = title.nextElementSibling;
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+        
+        // Interactive checklist
+        const checklistItems = document.querySelectorAll('.checklist-item');
+        
+        checklistItems.forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('completed');
+                const checkbox = item.querySelector('.checklist-checkbox i');
+                if (item.classList.contains('completed')) {
+                    checkbox.style.display = 'block';
+                } else {
+                    checkbox.style.display = 'none';
+                }
+            });
+        });
+        
+        // Checkbox validation for Pre-Trade Checklist
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Uncheck other checkbox in same group
+                const name = this.id.split('-')[0];
+                const type = this.id.split('-')[1];
+                
+                if (type === 'yes') {
+                    document.getElementById(`${name}-no`).checked = false;
+                } else {
+                    document.getElementById(`${name}-yes`).checked = false;
+                }
+                
+                updateChart();
+            });
+        });
+        
+        // Pie Chart for Pre-Trade Checklist
+        const checklistChartCtx = document.getElementById('checklistChart').getContext('2d');
+        let checklistChart;
+
+        function createChart() {
+            if (!checklistChartCtx) return;
+            if (checklistChart) {
+                checklistChart.destroy();
+            }
+            const isDarkMode = body.classList.contains('dark-mode');
+            checklistChart = new Chart(checklistChartCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Valid', 'Invalid', 'Pending'],
+                    datasets: [{
+                        data: [0, 0, 3],
+                        backgroundColor: [
+                            isDarkMode ? '#22c55e' : '#28a745',
+                            isDarkMode ? '#ef4444' : '#dc3545',
+                            isDarkMode ? '#475569' : '#6c757d'
+                        ],
+                        borderColor: isDarkMode ? 'var(--dark-card)' : 'var(--light-card)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: isDarkMode ? 'var(--dark-text)' : 'var(--light-text)',
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Checklist Validation Status',
+                            color: isDarkMode ? 'var(--dark-text)' : 'var(--light-text)',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateChart() {
+            if (!checklistChart) return;
+
+            const yesCount = document.querySelectorAll('.form-check-input[id$="-yes"]:checked').length;
+            const noCount = document.querySelectorAll('.form-check-input[id$="-no"]:checked').length;
+            const totalChecks = 3; 
+            const pending = totalChecks - (yesCount + noCount);
+            
+            checklistChart.data.datasets[0].data = [yesCount, noCount, pending];
+            
+            // Update colors based on theme
+            const isDarkMode = body.classList.contains('dark-mode');
+            checklistChart.options.plugins.title.color = isDarkMode ? 'var(--dark-text)' : 'var(--light-text)';
+            checklistChart.options.plugins.legend.labels.color = isDarkMode ? 'var(--dark-text)' : 'var(--light-text)';
+
+            checklistChart.data.datasets[0].backgroundColor = [
+                isDarkMode ? '#22c55e' : '#28a745',
+                isDarkMode ? '#ef4444' : '#dc3545',
+                isDarkMode ? '#475569' : '#6c757d'
+            ];
+            checklistChart.data.datasets[0].borderColor = isDarkMode ? 'var(--dark-card)' : 'var(--light-card)';
+            
+            checklistChart.update();
+        }
+
+        // --- Journal and Firestore Logic ---
+        const journalForm = document.getElementById('journalForm');
+        const journalTableBody = document.querySelector('#journal-entries-table tbody');
+        const pasteArea = document.getElementById('chart-paste-area');
+        const imagePreview = document.getElementById('chart-image-preview');
+        let pastedImageBase64 = null;
+
+
+        async function saveTrade(tradeData) {
+            if (!db || !userId) {
+                console.error("Firestore is not initialized or user is not authenticated.");
+                return;
+            }
+            try {
+                const collectionPath = `artifacts/${appId}/users/${userId}/trades`;
+                const docRef = await addDoc(collection(db, collectionPath), tradeData);
+                console.log("Document written with ID: ", docRef.id);
+            } catch (e) {
+                console.error("Error adding document: ", e);
+            }
+        }
+
+        function listenForTrades() {
+             if (!db || !userId) return;
+             const collectionPath = `artifacts/${appId}/users/${userId}/trades`;
+             const tradesCollection = collection(db, collectionPath);
+             
+             onSnapshot(tradesCollection, (snapshot) => {
+                const trades = [];
+                snapshot.forEach((doc) => {
+                    trades.push(doc.data());
+                });
+                
+                journalTableBody.innerHTML = ''; // Clear table before rendering
+                renderJournal(trades);
+             }, (error) => {
+                console.error("Error in snapshot listener:", error);
+             });
+        }
+        
+        function renderJournal(trades) {
+            // Sort trades by date on the client side before rendering
+            trades.sort((a, b) => new Date(b.date) - new Date(a.date));
+            journalTableBody.innerHTML = '';
+            trades.forEach(trade => {
+                const newRow = journalTableBody.insertRow();
+                let chartCellContent = 'N/A';
+                if (trade.chartImage) {
+                    chartCellContent = `<img src="${trade.chartImage}" alt="Chart" class="journal-chart-thumb">`;
+                }
+                
+                newRow.innerHTML = `
+                    <td>${trade.date}</td>
+                    <td>${trade.ticker.toUpperCase()}</td>
+                    <td>${trade.entry}</td>
+                    <td>${trade.exit}</td>
+                    <td><span class="result-${trade.result}">${trade.result.charAt(0).toUpperCase() + trade.result.slice(1)}</span></td>
+                    <td>${chartCellContent}</td>
+                    <td>${trade.notes}</td>
+                `;
+
+                const thumb = newRow.querySelector('.journal-chart-thumb');
+                if (thumb) {
+                    thumb.onclick = function() {
+                        modal.style.display = "block";
+                        modalImg.src = this.src;
+                    }
+                }
+            });
+        }
+
+
+        pasteArea.addEventListener('paste', (event) => {
+            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            for (const item of items) {
+                if (item.type.indexOf('image') === 0) {
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        pastedImageBase64 = evt.target.result; // This is the Base64 string
+                        imagePreview.src = pastedImageBase64;
+                        imagePreview.style.display = 'block';
+                        pasteArea.textContent = 'Image pasted!';
+                    };
+                    reader.readAsDataURL(blob);
+                    event.preventDefault(); 
+                }
+            }
+        });
+
+
+        journalForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            let chartImageBase64 = pastedImageBase64;
+            const fileInput = document.getElementById('journal-chart-image');
+            const file = fileInput.files[0];
+
+            if (!chartImageBase64 && file) {
+                try {
+                    chartImageBase64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = error => reject(error);
+                        reader.readAsDataURL(file);
+                    });
+                } catch (error) {
+                    console.error("Error reading file:", error);
+                    return; 
+                }
+            }
+
+            const tradeData = {
+                date: document.getElementById('journal-date').value,
+                ticker: document.getElementById('journal-ticker').value,
+                entry: document.getElementById('journal-entry').value,
+                exit: document.getElementById('journal-exit').value,
+                result: document.getElementById('journal-result').value,
+                chartImage: chartImageBase64,
+                notes: document.getElementById('journal-notes').value,
+                setup: document.getElementById('journal-setup').value,
+            };
+            
+            saveTrade(tradeData);
+            
+            // Reset form and previews
+            journalForm.reset();
+            pastedImageBase64 = null;
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            pasteArea.textContent = 'Paste Chart Image Here';
+            document.getElementById('journal-date').valueAsDate = new Date();
+        });
+        
+        // Modal Logic
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        const closeModal = document.querySelector(".close-modal");
+
+        closeModal.onclick = function() {
+            modal.style.display = "none";
+        }
+        modal.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // --- Watchlist and Calculator Logic ---
+        const watchlist = [
+            'AXISBANK', 'ICICIBANK', 'SBIN', 'HDFCBANK', 'BAJFINANCE', 
+            'INFY', 'TCS', 'RELIANCE', 'TATAMOTORS', 'MARUTI', 
+            'M&M', 'TATASTEEL', 'HINDALCO', 'JSWSTEEL', 'LT', 
+            'BHARTIARTL', 'TITAN', 'ADANIPORTS', 'ASHOKLEY', 'JINDALSTEL', 
+            'SUNPHARMA', 'KOTAKBANK', 'ULTRACEMCO', 'ITC', 'TECHM', 
+            'APOLLOHOSP', 'GRASIM', 'BRITANNIA', 'PIDILITIND', 'POWERGRID', 'DIVISLAB'
+        ];
+
+        const stockSelect = document.getElementById('calc-stock-select');
+
+        function populateCalculatorDropdown() {
+             watchlist.forEach(symbol => {
+                stockSelect.innerHTML += `<option value="${symbol}">${symbol}</option>`;
+            });
+        }
+
+        const calcInputs = ['calc-capital', 'calc-risk', 'calc-entry', 'calc-stop-price', 'calc-target-price', 'calc-stop-percent', 'calc-target-percent'];
+        calcInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                handleCalcInput(e.target.id);
+            });
+        });
+        const longBtn = document.getElementById('long-strategy-btn');
+        const shortBtn = document.getElementById('short-strategy-btn');
+        longBtn.addEventListener('click', () => {
+            longBtn.classList.add('active');
+            shortBtn.classList.remove('active');
+            calculateRiskReward();
+        });
+        shortBtn.addEventListener('click', () => {
+            shortBtn.classList.add('active');
+            longBtn.classList.remove('active');
+            calculateRiskReward();
+        });
+
+
+        function handleCalcInput(inputId) {
+            const entryPrice = parseFloat(document.getElementById('calc-entry').value) || 0;
+            const stopPriceInput = document.getElementById('calc-stop-price');
+            const stopPercentInput = document.getElementById('calc-stop-percent');
+            const targetPriceInput = document.getElementById('calc-target-price');
+            const targetPercentInput = document.getElementById('calc-target-percent');
+            const isLong = longBtn.classList.contains('active');
+
+            if (inputId === 'calc-stop-percent') {
+                const percent = parseFloat(stopPercentInput.value) || 0;
+                if (entryPrice > 0) {
+                    const stopPrice = isLong ? entryPrice * (1 - percent / 100) : entryPrice * (1 + percent / 100);
+                    stopPriceInput.value = stopPrice.toFixed(2);
+                }
+            } else if (inputId === 'calc-stop-price') {
+                const stopPrice = parseFloat(stopPriceInput.value) || 0;
+                if (entryPrice > 0) {
+                    const percent = Math.abs((stopPrice - entryPrice) / entryPrice * 100);
+                    stopPercentInput.value = percent.toFixed(2);
+                }
+            } else if (inputId === 'calc-target-percent') {
+                const percent = parseFloat(targetPercentInput.value) || 0;
+                if (entryPrice > 0) {
+                    const targetPrice = isLong ? entryPrice * (1 + percent / 100) : entryPrice * (1 - percent / 100);
+                    targetPriceInput.value = targetPrice.toFixed(2);
+                }
+            } else if (inputId === 'calc-target-price') {
+                const targetPrice = parseFloat(targetPriceInput.value) || 0;
+                if (entryPrice > 0) {
+                    const percent = Math.abs((targetPrice - entryPrice) / entryPrice * 100);
+                    targetPercentInput.value = percent.toFixed(2);
+                }
+            }
+            calculateRiskReward();
+        }
+
+
+        function calculateRiskReward() {
+            const capital = parseFloat(document.getElementById('calc-capital').value) || 0;
+            const riskPercent = parseFloat(document.getElementById('calc-risk').value) || 0;
+            const entry = parseFloat(document.getElementById('calc-entry').value) || 0;
+            const stop = parseFloat(document.getElementById('calc-stop-price').value) || 0;
+            const target = parseFloat(document.getElementById('calc-target-price').value) || 0;
+            const isLong = longBtn.classList.contains('active');
+
+            const riskAmount = capital * (riskPercent / 100);
+            const riskPerShare = isLong ? entry - stop : stop - entry;
+            
+            const positionSize = (riskPerShare > 0) ? Math.floor(riskAmount / riskPerShare) : 0;
+            
+            const potentialProfitPerShare = isLong ? target - entry : entry - target;
+            const rrRatio = (riskPerShare > 0 && potentialProfitPerShare > 0) ? (potentialProfitPerShare / riskPerShare).toFixed(2) : 0;
+            const potentialProfit = positionSize * potentialProfitPerShare;
+
+            document.getElementById('result-risk-amount').textContent = `₹${riskAmount.toFixed(2)}`;
+            document.getElementById('result-position-size').textContent = positionSize;
+            document.getElementById('result-rr-ratio').textContent = `1 : ${rrRatio}`;
+            document.getElementById('result-potential-profit').textContent = `₹${potentialProfit.toFixed(2)}`;
+
+            // R:R Table
+            const rrTableContainer = document.getElementById('rr-table-container');
+            rrTableContainer.innerHTML = '';
+            if (riskPerShare > 0) {
+                const table = document.createElement('table');
+                table.innerHTML = `<thead><tr><th>R:R</th><th>Sell Price</th></tr></thead><tbody></tbody>`;
+                const tbody = table.querySelector('tbody');
+                for (let i = 1; i <= 8; i++) {
+                    const targetPrice = isLong ? entry + (riskPerShare * i) : entry - (riskPerShare * i);
+                    tbody.innerHTML += `<tr><td>1:${i}</td><td>₹${targetPrice.toFixed(2)}</td></tr>`;
+                }
+                rrTableContainer.appendChild(table);
+            }
+        }
+        
+        /**
+         * Sorts a HTML table.
+         * * @param {HTMLTableElement} table The table to sort
+         * @param {number} column The index of the column to sort
+         * @param {boolean} asc Determines if the sorting will be in ascending
+         */
+        function sortTableByColumn(table, column, asc = true) {
+            const dirModifier = asc ? 1 : -1;
+            const tBody = table.tBodies[0];
+            const rows = Array.from(tBody.querySelectorAll("tr"));
+
+            // Sort each row
+            const sortedRows = rows.sort((a, b) => {
+                const aColText = a.querySelector(`td:nth-child(${ column + 1 })`).textContent.trim();
+                const bColText = b.querySelector(`td:nth-child(${ column + 1 })`).textContent.trim();
+
+                // Attempt to convert to number for numeric sort, otherwise string sort
+                const aVal = isNaN(parseFloat(aColText)) ? aColText : parseFloat(aColText);
+                const bVal = isNaN(parseFloat(bColText)) ? bColText : parseFloat(bColText);
+
+                return aVal > bVal ? (1 * dirModifier) : (-1 * dirModifier);
+            });
+
+            // Remove all existing TRs from the table
+            while (tBody.firstChild) {
+                tBody.removeChild(tBody.firstChild);
+            }
+
+            // Re-add the newly sorted rows
+            tBody.append(...sortedRows);
+
+            // Remember how the column is currently sorted
+            table.querySelectorAll("th").forEach(th => {
+                th.classList.remove("asc", "desc");
+                const icon = th.querySelector('.sort-icon');
+                if (icon) icon.className = 'sort-icon fas fa-sort';
+            });
+            
+            const activeTh = table.querySelector(`th:nth-child(${ column + 1})`);
+            activeTh.classList.toggle("asc", asc);
+            activeTh.classList.toggle("desc", !asc);
+            const activeIcon = activeTh.querySelector('.sort-icon');
+            if (activeIcon) {
+                activeIcon.className = asc ? 'sort-icon fas fa-sort-up' : 'sort-icon fas fa-sort-down';
+            }
+        }
+
+        function makeTablesSortable() {
+            document.querySelectorAll('.sortable-th').forEach(headerCell => {
+                // Add icon element
+                const icon = document.createElement('i');
+                icon.className = 'sort-icon fas fa-sort';
+                headerCell.appendChild(icon);
+
+                headerCell.addEventListener("click", () => {
+                    const tableElement = headerCell.closest('table');
+                    const headerIndex = Array.from(headerCell.parentElement.children).indexOf(headerCell);
+                    const currentIsAscending = headerCell.classList.contains("asc");
+
+                    sortTableByColumn(tableElement, headerIndex, !currentIsAscending);
+                });
+            });
+        }
+
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (auth) {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                     console.error("Authentication failed:", error);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("User authenticated with UID:", userId);
+                        listenForTrades();
+                    } else {
+                        console.log("User is signed out.");
+                        userId = null;
+                        if(journalTableBody) {
+                           journalTableBody.innerHTML = '<tr><td colspan="7">Please authenticate to see your journal.</td></tr>';
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('journal-date').valueAsDate = new Date();
+            populateCalculatorDropdown();
+            calculateRiskReward(); // Initial calculation
+            makeTablesSortable(); // Add sorting functionality
+        });
+
+    </script>
+</body>
+</html>
